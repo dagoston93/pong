@@ -10,8 +10,8 @@
 ;;;   -- add sound engine and effects
 ;;;   -- let player choose paddle color                                     -- DONE
 ;;;   -- animate the ball
-;;    -- add a kinda AI for CPU opponent
-;;    -- properly handle ppu $2000 and $2001 changes
+;;;   -- add a kinda AI for CPU opponent
+;;;   -- properly handle ppu $2000 and $2001 changes
 ;;;   -- find out ways to make gameplay exciting and implement them
 ;;;      --- items to pick up:
 ;;;          ---- longer paddle
