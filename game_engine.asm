@@ -211,7 +211,9 @@ move_ball:
   cmp ballx
   bcc .no_bounce
 
-.nobounce:  
+.nobounce:
+
+  
 
 .done:
   rts
