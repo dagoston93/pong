@@ -154,11 +154,7 @@ move_ball:
   beq .move_ball_right        ;; last operation set Z flag, we can use BEQ to jump to sideways movements
 
 .bounce_down:
-  lda #$00
-  sta ballup
-
-  lda #$01
-  sta balldown
+  jsr ball_bounce_up_down
 
   cpy #$00
   bne .ball_down_loop          ;; If we are bouncing in the middle of the loop, we are doing the rest of them
@@ -184,11 +180,7 @@ move_ball:
   beq .move_ball_right        ;; last operation set Z flag, we can use BEQ to jump to sideways movements
 
 .bounce_up:
-  lda #$00
-  sta balldown
-
-  lda #$01
-  sta ballup
+  jsr ball_bounce_up_down
 
   cpy #$00
   bne .ball_up_loop          ;; If we are bouncing in the middle of the loop, we are doing the rest of them
@@ -196,24 +188,179 @@ move_ball:
 
 .move_ball_right:
   lda ballright
-  beq .move_ball_left ;; if ballright = 0, skip this section
+  beq .move_ball_left     ;; if ballright = 0, skip this section
+
+  ldy ballspeedx
+
+.ball_right_loop:
+  dey
+  inc ballx
+
+;; Is the ball out?
+  lda ballx
+  cmp #$FF
+  bne .no_jump
+  jmp .ball_out     ;; Out of branch range...
+
+.no_jump:
+;; Has ball reached the "collosion zone?"
+  lda ballx
+  clc
+  adc #$08
+  cmp #PADDLE2X
+
+  bcc .no_bounce_right              ;; If not, we continue loop, no action needed (Bx + 8 < Px)
+  bne .check_side_collosion_right   ;; If ball past paddle check side collosion   (Bx + 8 > Px)
+
+;; Check for frontal collosion (Bx + 8 = Px)
+  ;; First check if ball is above  (By + 8 < Py)
+  lda bally
+  clc
+  adc #$08
+  cmp paddle2ytop
+  bcc .check_side_collosion_right     ;; still can be equal
+
+  ;; Then check if ball is below (Py + 32 < By )
+  lda paddle2ytop
+  clc
+  adc #$20
+  cmp bally
+  bcc .check_side_collosion_right    ;; still can be equal
+
+  ;; Frontal collosion detected
+  bcs .frontal_collosion_right
+
+;; Check for side collosion:
+.check_side_collosion_right:
+  ;; Is ball at top of paddle? (By + 8 = Py)
+  lda bally
+  clc
+  adc #$08
+  cmp paddle2ytop
+  beq .side_collosion_right
+
+  ;; OR is ball at bottom of paddle? (Py + 32 = Py)
+  lda paddle2ytop
+  clc
+  adc #$20
+  cmp bally
+  beq .side_collosion_right
+
+  ;; If not, nothing to do :)
+  bne .no_bounce_right
+
+;; Side collosion detected
+.side_collosion_right:
+  ;; If ball has past the half width of the paddle we bounce out ( Bx < Px +4 )
+  lda #PADDLE2X+4
+  cmp ballx
+
+  bcc .side_bounce_out
+  bcs .side_bounce_in
+
+  ;; Frontal collosion
+.frontal_collosion_right:
+  jsr ball_bounce_left_right
+  jmp .continue_right_loop
+
+.no_bounce_right:
+.continue_right_loop:
+  cpy #$00                ;; If no more px left to move, we are done
+  beq .done
+  jmp .ball_right_loop     ;; otherwise we loop back
 
 .move_ball_left:
   lda ballleft
-  beq .done ;; if ballright = 0, skip this section
+  beq .done           ;; if ballleft = 0, skip this section
 
   ldy ballspeedx
+
 .ball_left_loop:
   dey
   dec ballx
 
+;; Is the ball out?
+  lda ballx
+  beq .ball_out
+
+;; Has ball reached the "collosion zone?"
   lda #PADDLE1X+8
   cmp ballx
-  bcc .no_bounce
+  bcc .no_bounce_left              ;; If not, we continue loop, no action needed (Bx >  Px + 8)
+  bne .check_side_collosion_left   ;; If ball past paddle check side collosion   (Bx <  Px + 8)
 
-.nobounce:
+;; Check for frontal collosion (Bx = Px + 8)
+  ;; First check if ball is above  (By + 8 < Py)
+  lda bally
+  clc
+  adc #$08
+  cmp paddle1ytop
+  bcc .check_side_collosion_left     ;; still can be equal
 
-  
+  ;; Then check if ball is below (Py + 32 < By )
+  lda paddle1ytop
+  clc
+  adc #$20
+  cmp bally
+  bcc .check_side_collosion_left    ;; still can be equal
+
+  ;; Frontal collosion detected
+  bcs .frontal_collosion_left
+
+;; Check for side collosion:
+.check_side_collosion_left:
+  ;; Is ball at top of paddle? (By + 8 = Py)
+  lda bally
+  clc
+  adc #$08
+  cmp paddle1ytop
+  beq .side_collosion_left
+
+  ;; OR is ball at bottom of paddle? (Py + 32 = Py)
+  lda paddle1ytop
+  clc
+  adc #$20
+  cmp bally
+  beq .side_collosion_left
+
+  ;; If not, nothing to do :)
+  bne .no_bounce_left
+
+;; Side collosion detected
+.side_collosion_left:
+  ;; If ball has past the half width of the paddle we bounce out ( Bx < Px +4 )
+  lda ballx
+  cmp #PADDLE1X+4
+  bcc .side_bounce_out
+
+  ;; Otherwise we do side bounce in
+.side_bounce_in:
+  jsr ball_bounce_up_down
+  jsr ball_bounce_left_right
+
+  jmp .done         ;; done -> if we try to finish the ballsped x amount of px movement,
+                    ;; we will bounce again, cuz y doesnt change anymore -> no bounce will be
+
+  ;;Side bounce out
+.side_bounce_out:
+  jsr ball_bounce_up_down
+  jmp .done         ;; done -> if we try to finish the ballsped x amount of px movement,
+                    ;; we will bounce again, cuz y doesnt change anymore -> no bounce will be
+
+  ;; Frontal collosion
+.frontal_collosion_left:
+  jsr ball_bounce_left_right
+  jmp .continue_left_loop
+
+.ball_out:
+  jsr reset_game_ball_out
+  jmp .done
+
+.no_bounce_left:
+.continue_left_loop:
+  cpy #$00                ;; If no more px left to move, we are done
+  beq .done
+  jmp .ball_left_loop     ;; otherwise we loop back
 
 .done:
   rts
@@ -222,24 +369,125 @@ move_ball:
 ;; This subroutine bounces the ball from left to right
 ball_bounce_left_right:
   lda ballleft
+  sta ballright
+
   eor #$01
   sta ballleft
 
-  lda ballright
-  eor #$01
-  sta ballright
   rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This subroutine bounces the ball up/down
 ball_bounce_up_down:
   lda ballup
+  sta balldown
   eor #$01
   sta ballup
 
-  lda balldown
-  eor #$01
-  sta balldown
+  rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine resets the game if the ball is out
+reset_game_ball_out:
+;; If ball was moving right P1 scored, otherwise P2
+  lda ballright
+  beq .p2_scored
+
+  inc score1
+  jsr buffer_p1_score_update
+
+  jmp .done
+  
+.p2_scored:
+  inc score2
+  jsr buffer_p2_score_update
+
+.done:
+  rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine buffers P1 score update
+buffer_p1_score_update:
+  lda #$02
+  sta DRAW_BUFFER
+
+  lda #$20
+  sta DRAW_BUFFER+1
+
+  lda #$44
+  sta DRAW_BUFFER+2
+
+  lda #%00000000
+  sta DRAW_BUFFER+3
+
+  ;; Save X and Y registers
+  tya
+  pha
+  txa
+  pha
+
+  ;; get the digits
+  lda score1
+  jsr get_score_digits
+
+  ;; store the digits
+  stx DRAW_BUFFER+4
+  sty DRAW_BUFFER+5
+
+  lda #$00
+  sta DRAW_BUFFER+6
+
+  ;; Restore x and Y registers
+  pla
+  tax
+  pla
+  tay
+
+  lda #$01
+  sta need_draw
+  rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine buffers P2 score update
+buffer_p2_score_update:
+  lda #$02
+  sta DRAW_BUFFER
+
+  lda #$20
+  sta DRAW_BUFFER+1
+
+  lda #$5A
+  sta DRAW_BUFFER+2
+
+  lda #%00000000
+  sta DRAW_BUFFER+3
+
+  ;; Save X and Y registers
+  tya
+  pha
+  txa
+  pha
+
+  ;; get the digits
+  lda score2
+  jsr get_score_digits
+
+  ;; store the digits
+  stx DRAW_BUFFER+4
+  sty DRAW_BUFFER+5
+
+  lda #$00
+  sta DRAW_BUFFER+6
+
+  ;; Restore x and Y registers
+  pla
+  tax
+  pla
+  tay
+
+  lda #$01
+  sta need_draw
+
   rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

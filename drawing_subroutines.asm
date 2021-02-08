@@ -980,7 +980,7 @@ draw_game_screen:
   iny
   cpy #$34
   bne .sprite_loop
-  
+
   rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
