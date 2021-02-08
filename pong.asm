@@ -1,5 +1,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; TODO:
+<<<<<<< HEAD
+=======
+;;; ADDING THIS LINE TO TEST GITHUB
+
+>>>>>>> 410a2e9d0d2be51bf1569d491068691102badce1
 ;;;   -- change assembler to NESASM                                         -- DONE
 ;;;   -- jump table for gamestates                                          -- DONE
 ;;;   -- separate parts to files                                            -- DONE
