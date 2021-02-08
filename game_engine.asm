@@ -196,121 +196,41 @@ move_ball:
 
 .move_ball_right:
   lda ballright
-  beq .move_ball_left         ;; if ballright = 0, skip this section
-
-  ldy ballspeedx
-
-.ball_right_loop:             ;; loop is for same reason as for up and down movements
-  dey
-  inc ballx
-  lda ballx
-  cmp #PADDLE2X-8               ;; Right side of the ball reaches paddle when its 8px before paddle x pos
-  bcc .right_no_collosion
-
-  jsr check_paddle2_collosion
-
-  cpx #$00                      ;; subroutine returns value in X
-  beq .right_no_collosion
-
-  cpx #$01
-  beq .right_frontal_collosion
-
-  cpx #$02
-  beq .right_bounce_in
-
-  cpx #$03
-  beq .right_bounce_out
-
-  ;; in case of unexpected return value, we take it as no collosion
-  bne .right_no_collosion
-
-  .right_frontal_collosion:
-  lda #$00
-  sta ballright
-
-  lda #$01
-  sta ballleft
-
-  cpy #$00
-  bne .ball_left_loop
-  beq .done
-
-  .right_bounce_in:
-  ;; Bounce the ball back
-  lda #$00
-  sta ballright
-
-  lda #$01
-  sta ballleft
-
-  .right_bounce_out:    ; From this point bounce in and out are the same
-  ;; Invert the up/down directions with EOR
-  lda ballup
-  eor #$01
-  sta ballup
-
-  lda balldown
-  eor #$01
-  sta balldown
-  jmp .done
-
-  .right_no_collosion:
-  cpy #$00
-  bne .ball_right_loop
-  beq .done
+  beq .move_ball_left ;; if ballright = 0, skip this section
 
 .move_ball_left:
   lda ballleft
-  beq .done        ;; if ballleft = 0, skip this section
+  beq .done ;; if ballright = 0, skip this section
 
   ldy ballspeedx
 .ball_left_loop:
   dey
   dec ballx
+
   lda #PADDLE1X+8
-  cmp ballx               ;; Left side of the ball reaches paddle when its 8px before paddle x pos
-  bcc .left_no_collosion
+  cmp ballx
+  bcc .no_bounce
 
-  jsr check_paddle1_collosion
+.nobounce:  
 
-  cpx #$00                      ;; subroutine returns value in X
-  beq .left_no_collosion
+.done:
+  rts
 
-  cpx #$01
-  beq .left_frontal_collosion
-
-  cpx #$02
-  beq .left_bounce_in
-
-  cpx #$03
-  beq .left_bounce_out
-
-  ;; in case of unexpected return value, we take it as no collosion
-  bne .left_no_collosion
-
-.left_frontal_collosion:
-  lda #$00
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine bounces the ball from left to right
+ball_bounce_left_right:
+  lda ballleft
+  eor #$01
   sta ballleft
 
-  lda #$01
+  lda ballright
+  eor #$01
   sta ballright
+  rts
 
-  cpy #$00
-  bne .jump_to_ball_right_loop
-  beq .done
-
-.left_bounce_in:
-
-  nop
-  ;; Bounce the ball back
-  lda #$01
-  sta ballright
-
-  lda #$00
-  sta ballleft
-
-.left_bounce_out:    ; From this point bounce in and out are the same
-  ;; Invert the up/down directions with EOR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine bounces the ball up/down
+ball_bounce_up_down:
   lda ballup
   eor #$01
   sta ballup
@@ -318,18 +238,7 @@ move_ball:
   lda balldown
   eor #$01
   sta balldown
-  jmp .done
-
-.left_no_collosion:
-  cpy #$00
-  bne .ball_left_loop
-
-.done:
   rts
-;;; We are out of range for branch instructions...
-.jump_to_ball_right_loop:
-  jmp .ball_right_loop
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Check paddle1 collosion and if ball is out
