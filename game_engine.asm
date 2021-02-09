@@ -407,6 +407,7 @@ reset_game_ball_out:
   jmp .reset_game
 
 .p2_scored:
+;; Increase and refresh score
   inc score2
   jsr buffer_p2_score_update
 
@@ -434,6 +435,26 @@ reset_game_ball_out:
   lda #PADDLE_TOP_LIMIT
   sta paddle1ytop
   sta paddle2ytop
+
+;; Check if game is won
+;; Check P1
+  lda score1
+  cmp winningscore
+  beq .game_over
+
+  lda score2
+  cmp winningscore
+  beq .game_over
+
+;; If noone won, we are done
+  jmp .done
+
+.game_over:
+  lda #STATEGAMEOVERDELAY
+  sta gamestate
+
+  lda #$35
+  sta timer_counter
 
 .done:
   rts
@@ -744,7 +765,6 @@ game_engine_options_winning_score:
 ;;; p1 and p2 can set color by pressing up or down
 ;;; when both pressed start, game begins
 ;;; when cpu is opponent, it choses randomly, ready immediately
-
 game_engine_options_paddle_color:
   ;; check if p1 pressed start already
   lda score1  ;; using this as temporary to save ram
@@ -893,7 +913,6 @@ game_engine_options_paddle_color:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This subroutine sets up the cpu paddle color
 ;; if 1 player mode, when start pressed after winning score is selected
-
 set_cpu_paddle_color:
   lda number_of_players
   beq .set_cpu_paddle
@@ -1042,7 +1061,45 @@ game_engine_start_delay:
   sta $2001
 
 
-.done
+.done:
+  rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This method is responsible for dealying game over state:
+game_engine_game_over_delay:
+  lda timer_counter
+  beq .delay_done
+
+  dec timer_counter
+  jmp .done
+
+.delay_done:
+
+  lda #STATEGAMEOVER
+  sta gamestate
+
+  lda #$00      ;; turn everything off except NMI
+  sta $2001
+
+  jsr draw_game_over_screen
+
+  lda #%00001110
+  sta $2001
+
+.done:
+  rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine is responsible for Game over state:
+game_engine_game_over:
+;; Wait for P1 start button. If pressed we reset the game
+  lda joypad1_pressed
+  and #BUTTON_START
+  beq .done
+
+  jmp RESET
+
+.done:
   rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1075,8 +1132,8 @@ STATEOPTIONS        = $02  ; displaying the options_screen
 STATESTARTDELAY     = $03  ; adding a little delay between options screen and game start
 STATEPLAYING        = $04  ; move paddles/ball, check for collisions
 STATEGAMEOVER       = $05  ; displaying game over screen
-STATEPAUSED         = $06  ; game is paused
-STATEWAITING        = $07  ; waiting before restarting
+STATEGAMEOVERDELAY  = $06  ; waiting before showing game over screen
+STATEPAUSED         = $07  ; game is paused
 
 ;;;;;;;;;;; JUMP TABLE FOR GAME STATES
 game_states_jump_table:
@@ -1085,3 +1142,5 @@ game_states_jump_table:
   .dw game_engine_options
   .dw game_engine_start_delay
   .dw game_engine_playing
+  .dw game_engine_game_over
+  .dw game_engine_game_over_delay

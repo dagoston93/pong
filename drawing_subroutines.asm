@@ -982,11 +982,170 @@ draw_game_screen:
   bne .sprite_loop
 
   rts
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine draws game over screen
+draw_game_over_screen:
+  jsr clear_screen
+
+;Game over
+  lda #$0A
+  sta DRAW_BUFFER
+
+  lda #$21
+  sta DRAW_BUFFER+1
+
+  lda #$AB
+  sta DRAW_BUFFER+2
+
+  lda #%00000010
+  sta DRAW_BUFFER+3
+
+  lda #LOW(string_game_over)
+  sta DRAW_BUFFER+4
+
+  lda #HIGH(string_game_over)
+  sta DRAW_BUFFER+5
+
+; Player
+  lda #$06
+  sta DRAW_BUFFER+6
+
+  lda #$21
+  sta DRAW_BUFFER+7
+
+  lda #$E9
+  sta DRAW_BUFFER+8
+
+  lda #%00000010
+  sta DRAW_BUFFER+9
+
+  lda #LOW(string_player)
+  sta DRAW_BUFFER+10
+
+  lda #HIGH(string_player)
+  sta DRAW_BUFFER+11
+
+;; Which player?
+  lda #$01
+  sta DRAW_BUFFER+12
+
+  lda #$21
+  sta DRAW_BUFFER+13
+
+  lda #$F0
+  sta DRAW_BUFFER+14
+
+  lda #%00000000
+  sta DRAW_BUFFER+15
+
+  inc lastscorer  ;; 0 if p1 -> add 1 -> 1 its the position of number 1 in pattern table
+  lda lastscorer
+  sta DRAW_BUFFER+16
+
+; Wins
+  lda #$04
+  sta DRAW_BUFFER+17
+
+  lda #$21
+  sta DRAW_BUFFER+18
+
+  lda #$F2
+  sta DRAW_BUFFER+19
+
+  lda #%00000010
+  sta DRAW_BUFFER+20
+
+  lda #LOW(string_wins)
+  sta DRAW_BUFFER+21
+
+  lda #HIGH(string_wins)
+  sta DRAW_BUFFER+22
+
+;; Exclamation_mark
+  lda #$01
+  sta DRAW_BUFFER+23
+
+  lda #$21
+  sta DRAW_BUFFER+24
+
+  lda #$F6
+  sta DRAW_BUFFER+25
+
+  lda #%00000000
+  sta DRAW_BUFFER+26
+
+  lda #$5D
+  sta DRAW_BUFFER+27
+
+; Wins
+  lda #$05
+  sta DRAW_BUFFER+28
+
+  lda #$22
+  sta DRAW_BUFFER+29
+
+  lda #$29
+  sta DRAW_BUFFER+30
+
+  lda #%00000010
+  sta DRAW_BUFFER+31
+
+  lda #LOW(string_score)
+  sta DRAW_BUFFER+32
+
+  lda #HIGH(string_score)
+  sta DRAW_BUFFER+33
+
+;; : xx - xx
+  lda #$09
+  sta DRAW_BUFFER+34
+
+  lda #$22
+  sta DRAW_BUFFER+35
+
+  lda #$2E
+  sta DRAW_BUFFER+36
+
+  lda #%00000000
+  sta DRAW_BUFFER+37
+
+  lda #$5B                  ;colon
+  sta DRAW_BUFFER+38
+
+  lda #$20                  ;space
+  sta DRAW_BUFFER+39
+
+  lda score1
+  jsr get_score_digits
+  stx DRAW_BUFFER+40
+  sty DRAW_BUFFER+41
+
+  lda #$20                  ;space
+  sta DRAW_BUFFER+42
+
+  lda #$5C                  ;dash
+  sta DRAW_BUFFER+43
+
+  lda #$20                  ;space
+  sta DRAW_BUFFER+44
+
+  lda score2
+  jsr get_score_digits
+  stx DRAW_BUFFER+45
+  sty DRAW_BUFFER+46
+
+;; End of buffer
+  lda #$00
+  sta DRAW_BUFFER+47
+
+  jsr draw_from_buffer
+
+  rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This method displays a score
 ;; expects:
-;;  -- in A: the score to display (max 2 digit)
+;;  -- in A: the score to display (max 19)
 ;;
 ;; returns:
 ;;  -- in X: the first digit

@@ -176,6 +176,16 @@ game_screen_sprite_data:
   .BYTE $FE, $FE, $FE, $FE                                          ; Reserve 2 sprites if
   .BYTE $FE, $FE, $FE, $FE                                          ; player picks up power up
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Game over screen:
+
+string_game_over:
+  .BYTE "GAME OVER", $5D ;Exclamation_mark
+
+
+string_wins:
+  .BYTE "WINS"
+
 ;;;;;; PADDLE PALLETES
 paddle_color_options:
   .BYTE $0F,$01,$11,$31  ; blue
