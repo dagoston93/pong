@@ -393,14 +393,47 @@ reset_game_ball_out:
   lda ballright
   beq .p2_scored
 
+;; Increase and refresh score
   inc score1
   jsr buffer_p1_score_update
 
-  jmp .done
-  
+;; Give ball to P1
+  lda #$00
+  sta lastscorer
+
+  lda #INITIAL_BALL_POS_P1_X
+  sta ballx
+
+  jmp .reset_game
+
 .p2_scored:
   inc score2
   jsr buffer_p2_score_update
+
+  ;; Give ball to P2
+  lda #$01
+  sta lastscorer
+
+  lda #INITIAL_BALL_POS_P2_X
+  sta ballx
+
+.reset_game:
+;; Stop ball
+  lda #$00
+  sta ball_released
+  sta ballleft
+  sta ballright
+  sta ballup
+  sta balldown
+
+;; Set ball Y coordinate
+  lda #INITIAL_BALL_POS_Y
+  sta bally
+
+;; Reset paddles
+  lda #PADDLE_TOP_LIMIT
+  sta paddle1ytop
+  sta paddle2ytop
 
 .done:
   rts
@@ -491,7 +524,7 @@ buffer_p2_score_update:
   rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Check paddle1 collosion and if ball is out
+;; Check paddle1 collosion and if ball is out     ---------------DELETE!
 ;; Retruns in X:
 ;;  - 0 if no collosion is detected
 ;;  - 1 if collosion with front part of paddle
@@ -551,7 +584,7 @@ check_paddle1_collosion:
 .done:
   rts
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Works tha same way as paddle 1 collosion check
+;; Works tha same way as paddle 1 collosion check                     --------- DELETE
 ;; Retruns in X:
 ;;  - 0 if no collosion is detected
 ;;  - 1 if collosion with front part of paddle
