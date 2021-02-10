@@ -52,16 +52,43 @@ game_engine_title:
 ;;  This subroutine is responsible
 ;;  for playing the game
 game_engine_playing:
+;; Check if pause button is pressed
+  lda joypad1_pressed
+  and #BUTTON_START
+  beq .no_pasue
+
+  ;; Turn off ppu, draw paused text and turn it back on
+  lda #$00
+  sta $2001
+
+  jsr draw_pause
+
+  lda ppu_mask_soft
+  sta $2001
+
+  lda #STATEPAUSED
+  sta gamestate
+
+  ;; Hide ball
+  lda #$FE
+  sta $0201
+
+  jmp .done
+
+.no_pasue:
 ;; Move paddles up and down
   jsr move_paddles
+
 ;; Release ball if needed
   jsr check_ball_release
+
 ;; Move the ball
   jsr move_ball
 
 ;; Update sprite data
   jsr game_engine_update_sprites
 
+.done:
   rts
 
 
@@ -404,7 +431,7 @@ reset_game_ball_out:
   lda #INITIAL_BALL_POS_P1_X
   sta ballx
 
-  jmp .reset_game
+  jmp .check_if_won
 
 .p2_scored:
 ;; Increase and refresh score
@@ -418,6 +445,18 @@ reset_game_ball_out:
   lda #INITIAL_BALL_POS_P2_X
   sta ballx
 
+.check_if_won:
+;; Check if game is won
+;; Check P1
+  lda score1
+  cmp winningscore
+  beq .game_over
+
+  lda score2
+  cmp winningscore
+  beq .game_over
+
+;; If noone won, we are reset the game
 .reset_game:
 ;; Stop ball
   lda #$00
@@ -436,22 +475,17 @@ reset_game_ball_out:
   sta paddle1ytop
   sta paddle2ytop
 
-;; Check if game is won
-;; Check P1
-  lda score1
-  cmp winningscore
-  beq .game_over
+  ;; Skip the game over section
+  bne .done
 
-  lda score2
-  cmp winningscore
-  beq .game_over
-
-;; If noone won, we are done
-  jmp .done
-
+;; Trigger game over
 .game_over:
   lda #STATEGAMEOVERDELAY
   sta gamestate
+
+  ;; Hide the ball
+  lda #$FE
+  sta $0201
 
   lda #$35
   sta timer_counter
@@ -1102,6 +1136,31 @@ game_engine_game_over:
 .done:
   rts
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; This subroutine is responsible for game pasued state
+game_engine_paused:
+  lda joypad1_pressed
+  and #BUTTON_START
+  beq .done
+
+  lda #STATEPLAYING
+  sta gamestate
+
+  lda #$00
+  sta $2001
+
+  jsr clear_pause
+
+  lda ppu_mask_soft
+  sta $2001
+
+  ;; Show ball
+  lda #SPRITE_BALL
+  sta $0201
+
+.done:
+  rts
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This subroutine jumps to the correct gamestate subroutine
 ;; using the jump table
@@ -1144,3 +1203,4 @@ game_states_jump_table:
   .dw game_engine_playing
   .dw game_engine_game_over
   .dw game_engine_game_over_delay
+  .dw game_engine_paused

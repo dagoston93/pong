@@ -1142,6 +1142,66 @@ draw_game_over_screen:
 
   rts
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Draw Pause
+draw_pause:
+; Wins
+  lda #$06
+  sta DRAW_BUFFER
+
+  lda #$21
+  sta DRAW_BUFFER+1
+
+  lda #$EE
+  sta DRAW_BUFFER+2
+
+  lda #%00000010
+  sta DRAW_BUFFER+3
+
+  lda #LOW(string_pause)
+  sta DRAW_BUFFER+4
+
+  lda #HIGH(string_pause)
+  sta DRAW_BUFFER+5
+
+  ;; End of buffer
+  lda #$00
+  sta DRAW_BUFFER+6
+
+  jsr draw_from_buffer
+
+  rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Clear Pause
+clear_pause:
+; Wins
+  lda #$06
+  sta DRAW_BUFFER
+
+  lda #$21
+  sta DRAW_BUFFER+1
+
+  lda #$EE
+  sta DRAW_BUFFER+2
+
+  lda #%00000100
+  sta DRAW_BUFFER+3
+
+  lda #$06
+  sta DRAW_BUFFER+4
+
+  lda #$20
+  sta DRAW_BUFFER+5
+
+  ;; End of buffer
+  lda #$00
+  sta DRAW_BUFFER+6
+
+  jsr draw_from_buffer
+
+  rts
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This method displays a score
 ;; expects:
