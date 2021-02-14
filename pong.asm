@@ -154,6 +154,11 @@ RESET:
   jsr clear_nametable1
   jsr draw_title_screen
 
+  ;; No scrolling
+  lda #$00
+  sta $2005
+  sta $2005
+
 ;;;Set some initial ball stats
   lda #INITIAL_BALL_POS_Y
   sta bally

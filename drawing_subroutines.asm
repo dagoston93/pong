@@ -87,6 +87,12 @@ draw_title_screen:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This method draws the options screen
 draw_options_screen:
+
+  lda #$00      ;; turn everything off except NMI
+  sta $2001
+
+  jsr clear_nametable0
+
 ;;game settings
   lda #$20
   sta DRAW_BUFFER
@@ -630,6 +636,9 @@ draw_options_screen:
   cpy #$30
   bne .sprite_loop
 
+  lda ppu_mask_soft
+  sta $2001
+
 ; NO scroll
   lda #$00
   sta $2005
@@ -640,6 +649,10 @@ draw_options_screen:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This subroutine draws the game SCREEN
 draw_game_screen:
+
+  lda #$00      ;; turn everything off except NMI
+  sta $2001
+
   lda #$80
   sta DRAW_BUFFER
 
@@ -971,6 +984,14 @@ draw_game_screen:
 
   jsr draw_from_buffer
 
+  lda ppu_mask_soft
+  sta $2001
+
+  ;; No scrolling
+  lda #$00
+  sta $2005
+  sta $2005
+
 ;; set up sprites
 
   ldy #$00
@@ -985,6 +1006,10 @@ draw_game_screen:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This subroutine draws game over screen
 draw_game_over_screen:
+
+  lda #$00      ;; turn everything off except NMI
+  sta $2001
+
   jsr clear_screen
 
 ;Game over
@@ -1140,12 +1165,25 @@ draw_game_over_screen:
 
   jsr draw_from_buffer
 
+  lda #%00001110
+  sta $2001
+
+  ;; No scrolling
+  lda #$00
+  sta $2005
+  sta $2005
+
   rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Draw Pause
 draw_pause:
-; Wins
+
+;; Turn PPU off
+  lda #$00
+  sta $2001
+
+; Pause
   lda #$06
   sta DRAW_BUFFER
 
@@ -1170,12 +1208,25 @@ draw_pause:
 
   jsr draw_from_buffer
 
+  ;; Turn PPU on
+  lda ppu_mask_soft
+  sta $2001
+
+  ;; No scrolling
+  lda #$00
+  sta $2005
+  sta $2005
+
   rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Clear Pause
 clear_pause:
-; Wins
+; Turn PPU off
+  lda #$00
+  sta $2001
+
+; Spaces
   lda #$06
   sta DRAW_BUFFER
 
@@ -1199,6 +1250,15 @@ clear_pause:
   sta DRAW_BUFFER+6
 
   jsr draw_from_buffer
+
+  ;; Turn PPU back on
+  lda ppu_mask_soft
+  sta $2001
+
+  ;; No scrolling
+  lda #$00
+  sta $2005
+  sta $2005
 
   rts
 

@@ -33,17 +33,10 @@ game_engine_title:
   beq .done
 
 ;; If start button is pressed we draw the game options screen and change game state
-  lda #$00      ;; turn everything off except NMI
-  sta $2001
-
-  jsr clear_nametable0
   jsr draw_options_screen
 
   lda #STATEOPTIONS
   sta gamestate
-
-  lda ppu_mask_soft
-  sta $2001
 
 .done:
   rts
@@ -57,14 +50,8 @@ game_engine_playing:
   and #BUTTON_START
   beq .no_pasue
 
-  ;; Turn off ppu, draw paused text and turn it back on
-  lda #$00
-  sta $2001
-
+  ;; Draw paused text and turn it back on
   jsr draw_pause
-
-  lda ppu_mask_soft
-  sta $2001
 
   lda #STATEPAUSED
   sta gamestate
@@ -1086,14 +1073,7 @@ game_engine_start_delay:
   lda #STATEPLAYING
   sta gamestate
 
-  lda #$00      ;; turn everything off except NMI
-  sta $2001
-
   jsr draw_game_screen
-
-  lda ppu_mask_soft
-  sta $2001
-
 
 .done:
   rts
@@ -1112,13 +1092,7 @@ game_engine_game_over_delay:
   lda #STATEGAMEOVER
   sta gamestate
 
-  lda #$00      ;; turn everything off except NMI
-  sta $2001
-
   jsr draw_game_over_screen
-
-  lda #%00001110
-  sta $2001
 
 .done:
   rts
@@ -1146,13 +1120,7 @@ game_engine_paused:
   lda #STATEPLAYING
   sta gamestate
 
-  lda #$00
-  sta $2001
-
   jsr clear_pause
-
-  lda ppu_mask_soft
-  sta $2001
 
   ;; Show ball
   lda #SPRITE_BALL
