@@ -1201,7 +1201,7 @@ clear_pause:
   jsr draw_from_buffer
 
   rts
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This method displays a score
 ;; expects:

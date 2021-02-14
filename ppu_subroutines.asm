@@ -22,7 +22,7 @@ WriteToPPU:
   inc ppu_data_address
   bne .loop_done             ; if Z flag set, we rolled over, thus need to increment HI byte
   inc ppu_data_address+1
-  
+
 .loop_done:
   dex                        ; decrement loop counter
   bne .loop                  ; when counter is 0 we are done
